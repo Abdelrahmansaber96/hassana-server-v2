@@ -6,7 +6,6 @@ const { Pagination } = require('../utils/pagination');
 const APIFilters = require('../utils/filters');
 const { sendNotificationToCustomer } = require('../services/push-notification-service');
 
-// @desc    Get all bookings
 // @route   GET /api/bookings
 // @access  Private
 const getBookings = asyncHandler(async (req, res) => {
