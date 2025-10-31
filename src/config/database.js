@@ -8,7 +8,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 const connectDB = async () => {
   try {
     // use MONGODB_URI from .env or environment, fallback to DATABASE_URL
-    const mongoURI = process.env.MONGODB_URI || process.env.DATABASE_URL;
+    const mongoURI = process.env.MONGODB_URI;
     console.log('Attempting to connect to:', mongoURI);
 
     if (!mongoURI) {
