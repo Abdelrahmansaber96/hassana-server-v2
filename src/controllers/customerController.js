@@ -1,4 +1,4 @@
-﻿const Customer = require('../models/customer');
+﻿const Customer = require('../models/Customer');
 const Booking = require('../models/Booking');
 const { asyncHandler } = require('../utils/AppError');
 const { sendSuccess, sendError, sendNotFound } = require('../utils/helpers');
