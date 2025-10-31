@@ -1,10 +1,20 @@
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const path = require('path');
+
+// load environment variables from project root .env during local development
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const connectDB = async () => {
   try {
-    // استخدام URI مباشر كحل مؤقت
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/animal_vaccination_db';
+    // use MONGODB_URI from .env or environment, fallback to DATABASE_URL
+    const mongoURI = process.env.MONGODB_URI || process.env.DATABASE_URL;
     console.log('Attempting to connect to:', mongoURI);
+
+    if (!mongoURI) {
+      console.error('❌ Missing MongoDB connection string. Set MONGODB_URI in your .env or environment.');
+      process.exit(1);
+    }
     
     const conn = await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
