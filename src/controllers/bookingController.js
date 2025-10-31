@@ -1,5 +1,5 @@
 const Booking = require('../models/Booking');
-const Customer = require('../models/customer');
+const Customer = require('../models/Customer');
 const { asyncHandler } = require('../utils/AppError');
 const { sendSuccess, sendError, sendNotFound } = require('../utils/helpers');
 const { Pagination } = require('../utils/pagination');
