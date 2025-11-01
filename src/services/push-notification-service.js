@@ -72,21 +72,54 @@ const sendNotificationToDevice = asyncHandler(async (deviceToken, notification) 
   }
 
   try {
+    // تحويل جميع القيم في data إلى string (مطلوب من Firebase)
+    const dataPayload = {};
+    Object.keys(notification).forEach(key => {
+      if (key !== 'title' && key !== 'body') {
+        dataPayload[key] = String(notification[key] || '');
+      }
+    });
+    dataPayload.timestamp = new Date().toISOString();
+    dataPayload.click_action = 'FLUTTER_NOTIFICATION_CLICK';
+
     const message = {
       notification: {
         title: notification.title || 'إشعار جديد',
         body: notification.body || 'لديك إشعار جديد',
       },
-      data: {
-        ...notification,
-        timestamp: new Date().toISOString()
+      data: dataPayload,
+      token: deviceToken,
+      // إعدادات Android لضمان ظهور الإشعار حتى مع التطبيق المغلق
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: 'high_importance_channel',
+          priority: 'high',
+          defaultSound: true,
+          defaultVibrateTimings: true,
+          visibility: 'public',
+          icon: 'ic_notification',
+          color: '#2196F3',
+        }
       },
-      token: deviceToken
+      // إعدادات iOS
+      apns: {
+        payload: {
+          aps: {
+            alert: {
+              title: notification.title || 'إشعار جديد',
+              body: notification.body || 'لديك إشعار جديد',
+            },
+            sound: 'default',
+            badge: 1,
+            'content-available': 1,
+          }
+        },
+        headers: {
+          'apns-priority': '10',
+        }
+      }
     };
-
-    // Remove non-data fields from data payload
-    delete message.data.title;
-    delete message.data.body;
 
     const response = await admin.messaging().send(message);
 
@@ -94,6 +127,7 @@ const sendNotificationToDevice = asyncHandler(async (deviceToken, notification) 
     return response;
   } catch (error) {
     console.error('❌ Failed to send notification:', error.message);
+    console.error('Error details:', error);
     throw error;
   }
 });
@@ -117,43 +151,77 @@ const sendNotificationToMultipleDevices = asyncHandler(
     }
 
     try {
-      const message = {
-        notification: {
-          title: notification.title || 'إشعار جديد',
-          body: notification.body || 'لديك إشعار جديد',
-        },
-        data: {
-          ...notification,
-          timestamp: new Date().toISOString()
-        },
-        tokens: deviceTokens
-      };
-
-      // Remove non-data fields from data payload
-      delete message.data.title;
-      delete message.data.body;
-
-      const response = await admin.messaging().sendMulticast(message);
-
-      console.log('✅ Notifications sent successfully:', {
-        successCount: response.successCount,
-        failureCount: response.failureCount
-      });
-
-      // Log failed tokens
-      if (response.failureCount > 0) {
-        response.responses.forEach((resp, idx) => {
-          if (!resp.success) {
-            console.error(`Failed to send to token ${idx}:`, resp.error);
-          }
-        });
+    // تحويل جميع القيم في data إلى string (مطلوب من Firebase)
+    const dataPayload = {};
+    Object.keys(notification).forEach(key => {
+      if (key !== 'title' && key !== 'body') {
+        dataPayload[key] = String(notification[key] || '');
       }
+    });
+    dataPayload.timestamp = new Date().toISOString();
+    dataPayload.click_action = 'FLUTTER_NOTIFICATION_CLICK';
 
-      return response;
-    } catch (error) {
-      console.error('❌ Failed to send multiple notifications:', error.message);
-      throw error;
+    const message = {
+      notification: {
+        title: notification.title || 'إشعار جديد',
+        body: notification.body || 'لديك إشعار جديد',
+      },
+      data: dataPayload,
+      tokens: deviceTokens,
+      // إعدادات Android لضمان ظهور الإشعار حتى مع التطبيق المغلق
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: 'high_importance_channel',
+          priority: 'high',
+          defaultSound: true,
+          defaultVibrateTimings: true,
+          visibility: 'public',
+          icon: 'ic_notification',
+          color: '#2196F3',
+        }
+      },
+      // إعدادات iOS
+      apns: {
+        payload: {
+          aps: {
+            alert: {
+              title: notification.title || 'إشعار جديد',
+              body: notification.body || 'لديك إشعار جديد',
+            },
+            sound: 'default',
+            badge: 1,
+            'content-available': 1,
+          }
+        },
+        headers: {
+          'apns-priority': '10',
+        }
+      }
+    };
+
+    const response = await admin.messaging().sendMulticast(message);
+
+    console.log('✅ Notifications sent successfully:', {
+      successCount: response.successCount,
+      failureCount: response.failureCount
+    });
+
+    // Log failed tokens
+    if (response.failureCount > 0) {
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          console.error(`Failed to send to token ${idx}:`, resp.error.message);
+        }
+      });
     }
+
+    return response;
+  } catch (error) {
+    console.error('❌ Failed to send multiple notifications:', error.message);
+    console.error('Error details:', error);
+    throw error;
+  }
   }
 );
 
