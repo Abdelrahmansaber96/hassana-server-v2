@@ -2,6 +2,7 @@ const Notification = require('../models/Notification');
 const { asyncHandler } = require('../utils/AppError');
 const { sendSuccess, sendError, sendNotFound } = require('../utils/helpers');
 const { Pagination } = require('../utils/pagination');
+const { sendNotificationToCustomer, sendNotificationToMultipleDevices } = require('../services/push-notification-service');
 
 // @desc    Get all notifications
 // @route   GET /api/notifications
@@ -151,6 +152,97 @@ const createNotification = asyncHandler(async (req, res) => {
   });
 
   await notification.populate('createdBy', 'name');
+
+  // إرسال إشعارات Firebase Push للعملاء
+  if (req.body.recipients === 'customers' && targetCustomers.length > 0) {
+    try {
+      console.log(`📤 Sending Firebase notifications to ${targetCustomers.length} customers`);
+      
+      // جمع جميع device tokens من العملاء
+      const allDeviceTokens = [];
+      targetCustomers.forEach(customer => {
+        if (customer.deviceTokens && customer.deviceTokens.length > 0) {
+          allDeviceTokens.push(...customer.deviceTokens);
+        }
+      });
+
+      if (allDeviceTokens.length > 0) {
+        // إرسال إشعار Firebase لجميع الأجهزة
+        await sendNotificationToMultipleDevices(allDeviceTokens, {
+          title: req.body.title || 'إشعار جديد',
+          body: req.body.message || 'لديك إشعار جديد',
+          notificationId: notification._id.toString(),
+          type: req.body.type || 'general',
+          priority: req.body.priority || 'normal',
+          metadata: metadata
+        });
+        
+        console.log(`✅ Firebase notifications sent to ${allDeviceTokens.length} devices`);
+      } else {
+        console.log('⚠️  No device tokens found for customers');
+      }
+    } catch (error) {
+      console.error('❌ Firebase notification error:', error.message);
+      // لا نفشل العملية إذا فشل إرسال Firebase
+    }
+  } 
+  // إرسال للعملاء المحددين
+  else if (req.body.recipients === 'specific' && req.body.specificCustomers && req.body.specificCustomers.length > 0) {
+    try {
+      console.log(`📤 Sending Firebase notifications to ${req.body.specificCustomers.length} specific customers`);
+      
+      const specificCustomers = await Customer.find({
+        _id: { $in: req.body.specificCustomers }
+      });
+
+      for (const customer of specificCustomers) {
+        if (customer.deviceTokens && customer.deviceTokens.length > 0) {
+          await sendNotificationToCustomer(customer._id.toString(), {
+            title: req.body.title || 'إشعار جديد',
+            body: req.body.message || 'لديك إشعار جديد',
+            notificationId: notification._id.toString(),
+            type: req.body.type || 'general',
+            priority: req.body.priority || 'normal',
+            metadata: metadata
+          });
+        }
+      }
+      
+      console.log(`✅ Firebase notifications sent to specific customers`);
+    } catch (error) {
+      console.error('❌ Firebase notification error:', error.message);
+    }
+  }
+  // إرسال لجميع العملاء
+  else if (req.body.recipients === 'all') {
+    try {
+      console.log('📤 Sending Firebase notifications to ALL customers');
+      
+      const allCustomers = await Customer.find({ isActive: true });
+      const allDeviceTokens = [];
+      
+      allCustomers.forEach(customer => {
+        if (customer.deviceTokens && customer.deviceTokens.length > 0) {
+          allDeviceTokens.push(...customer.deviceTokens);
+        }
+      });
+
+      if (allDeviceTokens.length > 0) {
+        await sendNotificationToMultipleDevices(allDeviceTokens, {
+          title: req.body.title || 'إشعار جديد',
+          body: req.body.message || 'لديك إشعار جديد',
+          notificationId: notification._id.toString(),
+          type: req.body.type || 'general',
+          priority: req.body.priority || 'normal',
+          metadata: metadata
+        });
+        
+        console.log(`✅ Firebase notifications sent to ${allDeviceTokens.length} devices`);
+      }
+    } catch (error) {
+      console.error('❌ Firebase notification error:', error.message);
+    }
+  }
 
   sendSuccess(res, notification, 'Notification created successfully', 201);
 });

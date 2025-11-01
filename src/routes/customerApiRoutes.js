@@ -44,6 +44,84 @@ router.patch('/notifications/:id/read', markAsReadForCustomer);
 router.get('/profile/:customerId', getCustomerProfile);
 router.put('/profile/:customerId', updateCustomerProfile);
 
+// Device token management (for Firebase Push Notifications)
+router.post('/:customerId/device-token', async (req, res) => {
+  try {
+    const Customer = require('../models/Customer');
+    const { deviceToken } = req.body;
+
+    if (!deviceToken) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Device token is required' 
+      });
+    }
+
+    const customer = await Customer.findById(req.params.customerId);
+    if (!customer) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Customer not found' 
+      });
+    }
+
+    // إضافة token إذا لم يكن موجود
+    if (!customer.deviceTokens.includes(deviceToken)) {
+      customer.deviceTokens.push(deviceToken);
+      await customer.save();
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Device token registered successfully',
+      data: { deviceTokens: customer.deviceTokens }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+});
+
+// Remove device token (عند logout)
+router.delete('/:customerId/device-token', async (req, res) => {
+  try {
+    const Customer = require('../models/Customer');
+    const { deviceToken } = req.body;
+
+    if (!deviceToken) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Device token is required' 
+      });
+    }
+
+    const customer = await Customer.findById(req.params.customerId);
+    if (!customer) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Customer not found' 
+      });
+    }
+
+    // إزالة token
+    customer.deviceTokens = customer.deviceTokens.filter(t => t !== deviceToken);
+    await customer.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Device token removed successfully',
+      data: { deviceTokens: customer.deviceTokens }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
+  }
+});
+
 // Animal management routes (using customerId)
 router.post('/:customerId/animals', validate(animalValidator), addAnimal);
 router.get('/:customerId/animals', getMyAnimals);
