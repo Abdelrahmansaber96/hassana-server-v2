@@ -14,6 +14,9 @@ yarn-error.log*
 # Firebase Service Account (security critical!)
 config/findoctor-firebase-adminsdk.json
 config/*firebase*.json
+src/config/*firebase*.json
+src/config/findoctor-firebase-adminsdk.json
+src/config/hassanaserver-firebase-adminsdk*.json
 
 # Logs
 logs

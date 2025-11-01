@@ -157,18 +157,31 @@ const createNotification = asyncHandler(async (req, res) => {
   if (req.body.recipients === 'customers' && targetCustomers.length > 0) {
     try {
       console.log(`📤 Sending Firebase notifications to ${targetCustomers.length} customers`);
+      console.log(`📋 Recipients type: ${req.body.recipients}`);
       
       // جمع جميع device tokens من العملاء
       const allDeviceTokens = [];
-      targetCustomers.forEach(customer => {
+      targetCustomers.forEach((customer, index) => {
+        console.log(`   Customer ${index + 1}: ID=${customer._id}, Tokens=${customer.deviceTokens?.length || 0}`);
         if (customer.deviceTokens && customer.deviceTokens.length > 0) {
+          customer.deviceTokens.forEach(token => {
+            console.log(`      ✓ Token: ${token.substring(0, 20)}...`);
+          });
           allDeviceTokens.push(...customer.deviceTokens);
         }
       });
 
+      console.log(`📊 Total device tokens collected: ${allDeviceTokens.length}`);
+
       if (allDeviceTokens.length > 0) {
+        console.log(`🚀 Preparing Firebase message:`);
+        console.log(`   Title: ${req.body.title || 'إشعار جديد'}`);
+        console.log(`   Body: ${req.body.message || 'لديك إشعار جديد'}`);
+        console.log(`   Type: ${req.body.type || 'general'}`);
+        console.log(`   Priority: ${req.body.priority || 'normal'}`);
+        
         // إرسال إشعار Firebase لجميع الأجهزة
-        await sendNotificationToMultipleDevices(allDeviceTokens, {
+        const result = await sendNotificationToMultipleDevices(allDeviceTokens, {
           title: req.body.title || 'إشعار جديد',
           body: req.body.message || 'لديك إشعار جديد',
           notificationId: notification._id.toString(),
@@ -178,8 +191,10 @@ const createNotification = asyncHandler(async (req, res) => {
         });
         
         console.log(`✅ Firebase notifications sent to ${allDeviceTokens.length} devices`);
+        console.log(`📬 Firebase Response:`, result);
       } else {
         console.log('⚠️  No device tokens found for customers');
+        console.log('💡 Make sure customers have registered their FCM tokens via /fcm-token endpoint');
       }
     } catch (error) {
       console.error('❌ Firebase notification error:', error.message);

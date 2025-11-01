@@ -10,45 +10,57 @@ const initializeFirebase = () => {
 
   try {
     const fs = require('fs');
-    
-    // Try multiple possible locations for Firebase service account key
-    const configDir = path.join(__dirname, '../config');
-    const possiblePaths = [
-      path.join(__dirname, '../config/findoctor-firebase-adminsdk.json'),
-      path.join(__dirname, '../config/hassanaserver-firebase-adminsdk-fbsvc-d37c20a18e.json'),
-      path.join(__dirname, '../config/findoctor-firebase-adminsdk.json.json'),
-      path.join(__dirname, '../../config/findoctor-firebase-adminsdk.json'),
-      path.join(process.cwd(), 'config/findoctor-firebase-adminsdk.json'),
-      path.join(process.cwd(), 'src/config/findoctor-firebase-adminsdk.json')
-    ];
-
-    // أيضاً ابحث عن أي ملف firebase في المجلد
-    try {
-      const files = fs.readdirSync(configDir);
-      const firebaseFiles = files.filter(f => f.includes('firebase') && f.endsWith('.json'));
-      firebaseFiles.forEach(file => {
-        possiblePaths.push(path.join(configDir, file));
-      });
-    } catch (err) {
-      // ignore
-    }
-
     let serviceAccount = null;
     let foundPath = null;
 
-    // Try to find the service account file
-    for (const filepath of possiblePaths) {
+    // الطريقة 1: من Environment Variable (للإنتاج)
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
       try {
-        serviceAccount = require(filepath);
-        foundPath = filepath;
-        break;
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        foundPath = 'Environment Variable';
+        console.log('📌 Loading Firebase from environment variable');
       } catch (err) {
-        // Continue to next path
+        console.warn('⚠️  Failed to parse FIREBASE_SERVICE_ACCOUNT:', err.message);
+      }
+    }
+
+    // الطريقة 2: من ملف محلي (للتطوير)
+    if (!serviceAccount) {
+      const configDir = path.join(__dirname, '../config');
+      const possiblePaths = [
+        path.join(__dirname, '../config/findoctor-firebase-adminsdk.json'),
+        path.join(__dirname, '../config/hassanaserver-firebase-adminsdk-fbsvc-d37c20a18e.json'),
+        path.join(__dirname, '../config/findoctor-firebase-adminsdk.json.json'),
+        path.join(__dirname, '../../config/findoctor-firebase-adminsdk.json'),
+        path.join(process.cwd(), 'config/findoctor-firebase-adminsdk.json'),
+        path.join(process.cwd(), 'src/config/findoctor-firebase-adminsdk.json')
+      ];
+
+      // أيضاً ابحث عن أي ملف firebase في المجلد
+      try {
+        const files = fs.readdirSync(configDir);
+        const firebaseFiles = files.filter(f => f.includes('firebase') && f.endsWith('.json'));
+        firebaseFiles.forEach(file => {
+          possiblePaths.push(path.join(configDir, file));
+        });
+      } catch (err) {
+        // ignore
+      }
+
+      // Try to find the service account file
+      for (const filepath of possiblePaths) {
+        try {
+          serviceAccount = require(filepath);
+          foundPath = filepath;
+          break;
+        } catch (err) {
+          // Continue to next path
+        }
       }
     }
 
     if (!serviceAccount) {
-      throw new Error('Firebase service account file not found in any expected location');
+      throw new Error('Firebase service account not found. Set FIREBASE_SERVICE_ACCOUNT env variable or add file to src/config/');
     }
 
     admin.initializeApp({
@@ -57,7 +69,7 @@ const initializeFirebase = () => {
 
     firebaseInitialized = true;
     console.log('✅ Firebase Admin SDK initialized successfully');
-    console.log(`   Using config from: ${path.basename(foundPath)}`);
+    console.log(`   Using config from: ${foundPath === 'Environment Variable' ? foundPath : path.basename(foundPath)}`);
   } catch (error) {
     console.warn('⚠️  Firebase initialization skipped:', error.message);
     console.log('   Push notifications will not work until Firebase config is added');
@@ -156,14 +168,16 @@ const sendNotificationToDevice = asyncHandler(async (deviceToken, notification) 
 const sendNotificationToMultipleDevices = asyncHandler(
   async (deviceTokens, notification) => {
     if (!firebaseInitialized) {
-      console.warn('Firebase not initialized, skipping notification');
+      console.warn('⚠️  Firebase not initialized, skipping notification');
       return null;
     }
 
     if (!deviceTokens || deviceTokens.length === 0) {
-      console.warn('No device tokens provided');
+      console.warn('⚠️  No device tokens provided');
       return null;
     }
+
+    console.log(`🔔 sendNotificationToMultipleDevices called with ${deviceTokens.length} tokens`);
 
     try {
     // تحويل جميع القيم في data إلى string (مطلوب من Firebase)
@@ -175,6 +189,8 @@ const sendNotificationToMultipleDevices = asyncHandler(
     });
     dataPayload.timestamp = new Date().toISOString();
     dataPayload.click_action = 'FLUTTER_NOTIFICATION_CLICK';
+
+    console.log(`📦 Data Payload:`, dataPayload);
 
     const message = {
       notification: {
@@ -215,20 +231,31 @@ const sendNotificationToMultipleDevices = asyncHandler(
       }
     };
 
+    console.log(`📨 Sending to Firebase...`);
+    console.log(`   Tokens count: ${deviceTokens.length}`);
+    console.log(`   Title: ${message.notification.title}`);
+    console.log(`   Body: ${message.notification.body}`);
+
     const response = await admin.messaging().sendMulticast(message);
 
-    console.log('✅ Notifications sent successfully:', {
+    console.log(`✅ Firebase Response:`, {
       successCount: response.successCount,
-      failureCount: response.failureCount
+      failureCount: response.failureCount,
+      total: deviceTokens.length
     });
 
     // Log failed tokens
     if (response.failureCount > 0) {
+      console.warn(`⚠️  ${response.failureCount} notifications failed:`);
       response.responses.forEach((resp, idx) => {
         if (!resp.success) {
-          console.error(`Failed to send to token ${idx}:`, resp.error.message);
+          console.error(`   ❌ Token ${idx + 1}: ${resp.error.message}`);
+          console.error(`      Code: ${resp.error.code}`);
+          console.error(`      Token: ${deviceTokens[idx]?.substring(0, 30)}...`);
         }
       });
+    } else {
+      console.log(`🎉 All ${response.successCount} notifications sent successfully!`);
     }
 
     return response;
