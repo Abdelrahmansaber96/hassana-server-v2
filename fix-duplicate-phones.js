@@ -57,7 +57,7 @@ async function findAndFixDuplicates() {
       for (let i = 0; i < dup.ids.length; i++) {
         const customer = await Customer.findById(dup.ids[i]);
         console.log(`     ${i + 1}. ${customer.name} (ID: ${dup.ids[i]})`);
-        console.log(`        Created: ${new Date(customer.createdAt).toLocaleString('ar-SA')}`);
+        console.log(`        Created: ${new Date(customer.createdAt).toLocaleString('en-GB')}`);
         console.log(`        Animals: ${customer.animals.length}`);
         console.log(`        Bookings: ${customer.totalBookings}`);
       }

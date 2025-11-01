@@ -61,7 +61,8 @@ const formatDate = (date, format = 'YYYY-MM-DD') => {
     return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
   }
   
-  return d.toLocaleDateString();
+  // Use en-GB for Gregorian calendar (not Hijri)
+  return d.toLocaleDateString('en-GB');
 };
 
 const getDateRange = (period) => {
@@ -152,14 +153,14 @@ const generateRandomString = (length = 8) => {
 
 // Number helper functions
 const formatCurrency = (amount, currency = 'SAR') => {
-  return new Intl.NumberFormat('ar-SA', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency
   }).format(amount);
 };
 
 const formatNumber = (number) => {
-  return new Intl.NumberFormat('ar-SA').format(number);
+  return new Intl.NumberFormat('en-US').format(number);
 };
 
 const calculatePercentage = (part, total) => {

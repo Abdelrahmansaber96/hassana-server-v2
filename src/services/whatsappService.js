@@ -90,7 +90,7 @@ class WhatsAppService {
 🏥 تأكيد حجز التطعيم
 
 رقم الحجز: ${booking.bookingNumber}
-التاريخ: ${booking.appointmentDate.toLocaleDateString('ar-SA')}
+التاريخ: ${booking.appointmentDate.toLocaleDateString('en-GB')}
 الوقت: ${booking.appointmentTime}
 الفرع: ${booking.branch.name}
 الحيوان: ${booking.animal.name} (${booking.animal.type})
@@ -121,7 +121,7 @@ class WhatsAppService {
 📞 موعد الاستشارة الهاتفية
 
 رقم الاستشارة: ${consultation.consultationNumber}
-التاريخ: ${consultation.scheduledDate.toLocaleDateString('ar-SA')}
+التاريخ: ${consultation.scheduledDate.toLocaleDateString('en-GB')}
 الوقت: ${consultation.scheduledTime}
 الطبيب: ${consultation.doctor.name}
 
@@ -152,7 +152,7 @@ class WhatsAppService {
       
       // تحضير البيانات للـ template
       const customerName = booking.customer?.name || 'غير محدد';
-      const appointmentDate = new Date(booking.appointmentDate).toLocaleDateString('ar-SA');
+      const appointmentDate = new Date(booking.appointmentDate).toLocaleDateString('en-GB');
       const vaccinationName = booking.vaccination.nameAr || booking.vaccination.name;
       const animalType = booking.animal.type === 'sheep' ? 'أغنام' : 
                          booking.animal.type === 'cow' ? 'أبقار' : 

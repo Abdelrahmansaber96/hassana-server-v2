@@ -458,7 +458,7 @@ const generateVaccinationTrends = () => {
   for (let i = 29; i >= 0; i--) {
     const date = new Date(currentDate);
     date.setDate(currentDate.getDate() - i);
-    labels.push(date.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' }));
+    labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
     data.push(Math.floor(Math.random() * 25) + 5);
   }
   
@@ -610,7 +610,7 @@ const getOperationsChartData = asyncHandler(async (req, res) => {
         const dateStr = date.toISOString().split('T')[0];
         const found = operationsData.find(item => item._id === dateStr);
         
-        labels.push(date.toLocaleDateString('ar-SA', { day: 'numeric' }));
+        labels.push(date.toLocaleDateString('en-US', { day: 'numeric' }));
         data.push(found ? found.count : 0);
       }
     } else if (dateFormat === 'daily') {
@@ -620,7 +620,7 @@ const getOperationsChartData = asyncHandler(async (req, res) => {
         const dateStr = date.toISOString().split('T')[0];
         const found = operationsData.find(item => item._id === dateStr);
         
-        labels.push(date.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' }));
+        labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
         data.push(found ? found.count : 0);
       }
     } else {
@@ -629,7 +629,7 @@ const getOperationsChartData = asyncHandler(async (req, res) => {
         const dateStr = date.toISOString().substr(0, 7);
         const found = operationsData.find(item => item._id === dateStr);
         
-        labels.push(date.toLocaleDateString('ar-SA', { month: 'long' }));
+        labels.push(date.toLocaleDateString('en-US', { month: 'long' }));
         data.push(found ? found.count : 0);
       }
     }

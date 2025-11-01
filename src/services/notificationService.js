@@ -9,7 +9,7 @@ class NotificationService {
       switch (type) {
         case 'confirmation':
           title = 'تأكيد حجز التطعيم';
-          message = `تم تأكيد حجزكم رقم ${booking.bookingNumber} بتاريخ ${booking.appointmentDate.toLocaleDateString('ar-SA')}`;
+          message = `تم تأكيد حجزكم رقم ${booking.bookingNumber} بتاريخ ${booking.appointmentDate.toLocaleDateString('en-GB')}`;
           break;
         case 'reminder':
           title = 'تذكير بموعد التطعيم';
