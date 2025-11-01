@@ -44,16 +44,19 @@ router.patch('/notifications/:id/read', markAsReadForCustomer);
 router.get('/profile/:customerId', getCustomerProfile);
 router.put('/profile/:customerId', updateCustomerProfile);
 
-// Device token management (for Firebase Push Notifications)
-router.post('/:customerId/device-token', async (req, res) => {
+// FCM Token management (for Firebase Push Notifications)
+router.post('/:customerId/fcm-token', async (req, res) => {
   try {
     const Customer = require('../models/Customer');
-    const { deviceToken } = req.body;
+    const { fcmToken, deviceToken } = req.body;
+    
+    // قبول fcmToken أو deviceToken من التطبيق
+    const token = fcmToken || deviceToken;
 
-    if (!deviceToken) {
+    if (!token) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Device token is required' 
+        message: 'FCM token is required' 
       });
     }
 
@@ -66,17 +69,24 @@ router.post('/:customerId/device-token', async (req, res) => {
     }
 
     // إضافة token إذا لم يكن موجود
-    if (!customer.deviceTokens.includes(deviceToken)) {
-      customer.deviceTokens.push(deviceToken);
+    if (!customer.deviceTokens.includes(token)) {
+      customer.deviceTokens.push(token);
       await customer.save();
+      console.log(`✅ FCM token registered for customer: ${customer.name}`);
+    } else {
+      console.log(`ℹ️  FCM token already exists for customer: ${customer.name}`);
     }
 
     res.json({ 
       success: true, 
-      message: 'Device token registered successfully',
-      data: { deviceTokens: customer.deviceTokens }
+      message: 'FCM token registered successfully',
+      data: { 
+        customerId: customer._id,
+        deviceTokens: customer.deviceTokens 
+      }
     });
   } catch (error) {
+    console.error('❌ FCM token registration error:', error.message);
     res.status(500).json({ 
       success: false, 
       message: error.message 
@@ -84,16 +94,18 @@ router.post('/:customerId/device-token', async (req, res) => {
   }
 });
 
-// Remove device token (عند logout)
-router.delete('/:customerId/device-token', async (req, res) => {
+// Remove FCM token (عند logout)
+router.delete('/:customerId/fcm-token', async (req, res) => {
   try {
     const Customer = require('../models/Customer');
-    const { deviceToken } = req.body;
+    const { fcmToken, deviceToken } = req.body;
+    
+    const token = fcmToken || deviceToken;
 
-    if (!deviceToken) {
+    if (!token) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Device token is required' 
+        message: 'FCM token is required' 
       });
     }
 
@@ -106,20 +118,46 @@ router.delete('/:customerId/device-token', async (req, res) => {
     }
 
     // إزالة token
-    customer.deviceTokens = customer.deviceTokens.filter(t => t !== deviceToken);
+    const initialLength = customer.deviceTokens.length;
+    customer.deviceTokens = customer.deviceTokens.filter(t => t !== token);
     await customer.save();
+    
+    if (customer.deviceTokens.length < initialLength) {
+      console.log(`✅ FCM token removed for customer: ${customer.name}`);
+    }
 
     res.json({ 
       success: true, 
-      message: 'Device token removed successfully',
-      data: { deviceTokens: customer.deviceTokens }
+      message: 'FCM token removed successfully',
+      data: { 
+        customerId: customer._id,
+        deviceTokens: customer.deviceTokens 
+      }
     });
   } catch (error) {
+    console.error('❌ FCM token removal error:', error.message);
     res.status(500).json({ 
       success: false, 
       message: error.message 
     });
   }
+});
+
+// Legacy endpoint support (للتوافقية مع الكود القديم)
+router.post('/:customerId/device-token', async (req, res) => {
+  req.body.fcmToken = req.body.deviceToken;
+  return router.handle(
+    { ...req, url: req.url.replace('/device-token', '/fcm-token') }, 
+    res
+  );
+});
+
+router.delete('/:customerId/device-token', async (req, res) => {
+  req.body.fcmToken = req.body.deviceToken;
+  return router.handle(
+    { ...req, url: req.url.replace('/device-token', '/fcm-token') }, 
+    res
+  );
 });
 
 // Animal management routes (using customerId)
@@ -133,6 +171,7 @@ router.get('/:customerId/animals/:animalId/vaccinations', getVaccinationsForAnim
 
 // Booking routes
 router.post('/:customerId/bookings', validate(customerBookingValidator), bookVaccination);
+router.post('/:customerId/bookings/confirm', validate(customerBookingValidator), bookVaccination); // alias لـ Flutter
 router.get('/:customerId/bookings', getMyBookings);
 router.put('/:customerId/bookings/:bookingId/cancel', cancelBooking);
 
