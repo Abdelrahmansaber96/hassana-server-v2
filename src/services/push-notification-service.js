@@ -9,14 +9,29 @@ const initializeFirebase = () => {
   if (firebaseInitialized) return;
 
   try {
+    const fs = require('fs');
+    
     // Try multiple possible locations for Firebase service account key
+    const configDir = path.join(__dirname, '../config');
     const possiblePaths = [
       path.join(__dirname, '../config/findoctor-firebase-adminsdk.json'),
+      path.join(__dirname, '../config/hassanaserver-firebase-adminsdk-fbsvc-d37c20a18e.json'),
       path.join(__dirname, '../config/findoctor-firebase-adminsdk.json.json'),
       path.join(__dirname, '../../config/findoctor-firebase-adminsdk.json'),
       path.join(process.cwd(), 'config/findoctor-firebase-adminsdk.json'),
       path.join(process.cwd(), 'src/config/findoctor-firebase-adminsdk.json')
     ];
+
+    // أيضاً ابحث عن أي ملف firebase في المجلد
+    try {
+      const files = fs.readdirSync(configDir);
+      const firebaseFiles = files.filter(f => f.includes('firebase') && f.endsWith('.json'));
+      firebaseFiles.forEach(file => {
+        possiblePaths.push(path.join(configDir, file));
+      });
+    } catch (err) {
+      // ignore
+    }
 
     let serviceAccount = null;
     let foundPath = null;

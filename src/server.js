@@ -29,6 +29,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const settingRoutes = require('./routes/settingRoutes');
 const vaccinationRoutes = require('./routes/vaccinationRoutes');
 const customerApiRoutes = require('./routes/customerApiRoutes');
+const testRoutes = require('./routes/testRoutes'); // Test routes for Firebase
 
 const app = express();
 
@@ -155,6 +156,7 @@ app.use('/api/notifications', apiLimiter, notificationRoutes);
 app.use('/api/settings', apiLimiter, settingRoutes);
 app.use('/api/vaccinations', apiLimiter, vaccinationRoutes);
 app.use('/api/customer-api', customerApiRoutes);
+app.use('/api/test', testRoutes); // Test endpoints (no rate limiting for testing)
 
 // 🔹 404 handler
 app.use('*', (req, res) => {
