@@ -9,13 +9,32 @@ const initializeFirebase = () => {
   if (firebaseInitialized) return;
 
   try {
-    // Load Firebase service account key
-    const serviceAccountPath = path.join(
-      __dirname,
-      '../../config/findoctor-firebase-adminsdk.json'
-    );
+    // Try multiple possible locations for Firebase service account key
+    const possiblePaths = [
+      path.join(__dirname, '../config/findoctor-firebase-adminsdk.json'),
+      path.join(__dirname, '../config/findoctor-firebase-adminsdk.json.json'),
+      path.join(__dirname, '../../config/findoctor-firebase-adminsdk.json'),
+      path.join(process.cwd(), 'config/findoctor-firebase-adminsdk.json'),
+      path.join(process.cwd(), 'src/config/findoctor-firebase-adminsdk.json')
+    ];
 
-    const serviceAccount = require(serviceAccountPath);
+    let serviceAccount = null;
+    let foundPath = null;
+
+    // Try to find the service account file
+    for (const filepath of possiblePaths) {
+      try {
+        serviceAccount = require(filepath);
+        foundPath = filepath;
+        break;
+      } catch (err) {
+        // Continue to next path
+      }
+    }
+
+    if (!serviceAccount) {
+      throw new Error('Firebase service account file not found in any expected location');
+    }
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
@@ -23,9 +42,12 @@ const initializeFirebase = () => {
 
     firebaseInitialized = true;
     console.log('✅ Firebase Admin SDK initialized successfully');
+    console.log(`   Using config from: ${path.basename(foundPath)}`);
   } catch (error) {
-    console.error('❌ Firebase initialization failed:', error.message);
-    console.log('Note: Push notifications will not work until Firebase config is added');
+    console.warn('⚠️  Firebase initialization skipped:', error.message);
+    console.log('   Push notifications will not work until Firebase config is added');
+    console.log('   The app will continue to run normally without Firebase');
+    firebaseInitialized = false;
   }
 };
 
@@ -148,7 +170,7 @@ const sendNotificationToCustomer = asyncHandler(async (customerId, notification)
   }
 
   try {
-    const Customer = require('../models/customer');
+    const Customer = require('../models/Customer');
     const customer = await Customer.findById(customerId);
 
     if (!customer || !customer.deviceTokens || customer.deviceTokens.length === 0) {
