@@ -125,8 +125,13 @@ const createNotification = asyncHandler(async (req, res) => {
           customersCount: recipientsCount
         });
       } else {
-        // جميع العملاء
-        recipientsCount = await Customer.countDocuments();
+        // جميع العملاء النشطين
+        targetCustomers = await Customer.find({ isActive: true });
+        recipientsCount = targetCustomers.length;
+        
+        console.log('Admin notification to all customers:', {
+          customersCount: recipientsCount
+        });
       }
     }
   } else if (req.body.recipients === 'specific' && req.body.specificRecipients) {
