@@ -236,7 +236,7 @@ const sendNotificationToMultipleDevices = asyncHandler(
     console.log(`   Title: ${message.notification.title}`);
     console.log(`   Body: ${message.notification.body}`);
 
-    const response = await admin.messaging().sendMulticast(message);
+    const response = await admin.messaging().sendEachForMulticast(message);
 
     console.log(`✅ Firebase Response:`, {
       successCount: response.successCount,
