@@ -63,7 +63,7 @@ const APP_FLAGS = {
 app.get('/api/app-config', (req, res) => {
   res.json(APP_FLAGS);
 });
-🔹 Health check route
+// 🔹 Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
