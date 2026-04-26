@@ -51,7 +51,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // 🔹 App feature flags - غيّر القيم هنا مباشرة
 const APP_FLAGS = {
-  showBookings: false,
+  showBookings: true,
   showVaccinations: true,
   showOffers: true,
   showConsultations: false,
