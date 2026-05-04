@@ -4,6 +4,7 @@ const {
   loginCustomer,
   getCustomerProfile,
   updateCustomerProfile,
+  deleteCustomerAccount,
   addAnimal,
   getMyAnimals,
   updateAnimal,
@@ -43,6 +44,7 @@ router.patch('/notifications/:id/read', markAsReadForCustomer);
 // Profile management
 router.get('/profile/:customerId', getCustomerProfile);
 router.put('/profile/:customerId', updateCustomerProfile);
+router.delete('/profile/:customerId', deleteCustomerAccount);
 
 // FCM Token management (for Firebase Push Notifications)
 router.post('/:customerId/fcm-token', async (req, res) => {

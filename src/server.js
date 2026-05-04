@@ -49,6 +49,21 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// 🔹 App feature flags - غيّر القيم هنا مباشرة
+const APP_FLAGS = {
+  showBookings: true,
+  showVaccinations: true,
+  showOffers: true,
+  showConsultations: true,
+  showDoctors: true,
+  showBranches: true,
+  showNotifications: true,
+};
+
+app.get('/api/app-config', (req, res) => {
+  res.json(APP_FLAGS);
+});
+
 // 🔹 Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({

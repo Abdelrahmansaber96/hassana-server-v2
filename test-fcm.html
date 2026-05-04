@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار FCM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .response {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 4px;
+            display: none;
+        }
+        .response.show {
+            display: block;
+        }
+        .response.success {
+            border-left-color: #4CAF50;
+            background: #f1f8f4;
+        }
+        .response.error {
+            border-left-color: #f44336;
+            background: #fef5f5;
+        }
+        .response h3 {
+            margin-top: 0;
+        }
+        pre {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 اختبار إرسال إشعار FCM</h1>
+        
+        <!-- Test 1: Single Token -->
+        <div style="background: #f0f8ff; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h2 style="margin-top: 0;">📱 اختبار 1: إرسال لـ Token واحد</h2>
+            <form id="testForm">
+                <div class="form-group">
+                    <label for="fcmToken">FCM Token:</label>
+                    <textarea id="fcmToken" placeholder="ضع Token هنا" required>defR3mJDS5C5bZCOYIOKCU:APA91bGtfVzvLEsjytYA_P1E1hoZkNsFJkHUvyqxniTYZhRE4Gs5HLWZEkFnREyfU9Q5G275v_nPSVYyW-FAKmV0x4Dp0A0Z6vBtXYSuLwMBz1HpzBbeSZw</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title">العنوان:</label>
+                    <input type="text" id="title" placeholder="عنوان الإشعار" value="🔔 اختبار" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="body">النص:</label>
+                    <input type="text" id="body" placeholder="نص الإشعار" value="رسالة اختبار من السيرفر" required>
+                </div>
+                
+                <button type="submit">📤 إرسال الإشعار</button>
+            </form>
+        </div>
+
+        <!-- Test 2: All Customers -->
+        <div style="background: #fff8f0; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h2 style="margin-top: 0;">👥 اختبار 2: إرسال لجميع العملاء</h2>
+            <form id="testFormAllCustomers">
+                <div class="form-group">
+                    <label for="title2">العنوان:</label>
+                    <input type="text" id="title2" placeholder="عنوان الإشعار" value="🔔 إشعار لجميع العملاء" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="body2">النص:</label>
+                    <input type="text" id="body2" placeholder="نص الإشعار" value="رسالة اختبار للجميع" required>
+                </div>
+                
+                <button type="submit" style="background: #FF9800;">📤 إرسال لجميع العملاء</button>
+            </form>
+        </div>
+        
+        <div id="response" class="response">
+            <h3>النتيجة:</h3>
+            <pre id="responseContent"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Test 1: Single Token
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fcmToken = document.getElementById('fcmToken').value.trim();
+            const title = document.getElementById('title').value;
+            const body = document.getElementById('body').value;
+            
+            if (!fcmToken) {
+                alert('الرجاء إدخال FCM Token');
+                return;
+            }
+            
+            const responseDiv = document.getElementById('response');
+            const responseContent = document.getElementById('responseContent');
+            
+            try {
+                console.log('📤 جاري الإرسال...');
+                
+                const response = await fetch('http://localhost:3000/api/test/send-notification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        fcmToken: fcmToken,
+                        title: title,
+                        body: body
+                    })
+                });
+                
+                const data = await response.json();
+                
+                responseDiv.classList.add('show');
+                if (response.ok) {
+                    responseDiv.classList.add('success');
+                    responseDiv.classList.remove('error');
+                    responseContent.textContent = '✅ نجح!\n\n' + JSON.stringify(data, null, 2);
+                    console.log('✅ نجح الإرسال');
+                } else {
+                    responseDiv.classList.add('error');
+                    responseDiv.classList.remove('success');
+                    responseContent.textContent = '❌ خطأ!\n\n' + JSON.stringify(data, null, 2);
+                    console.error('❌ فشل الإرسال');
+                }
+            } catch (error) {
+                responseDiv.classList.add('show', 'error');
+                responseDiv.classList.remove('success');
+                responseContent.textContent = '❌ خطأ في الاتصال:\n\n' + error.message;
+                console.error('❌ خطأ:', error);
+            }
+        });
+
+        // Test 2: All Customers
+        document.getElementById('testFormAllCustomers').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('title2').value;
+            const message = document.getElementById('body2').value;
+            
+            const responseDiv = document.getElementById('response');
+            const responseContent = document.getElementById('responseContent');
+            
+            try {
+                console.log('📤 جاري الإرسال لجميع العملاء...');
+                
+                const response = await fetch('http://localhost:3000/api/test/send-notification-to-all-customers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        message: message
+                    })
+                });
+                
+                const data = await response.json();
+                
+                responseDiv.classList.add('show');
+                if (response.ok) {
+                    responseDiv.classList.add('success');
+                    responseDiv.classList.remove('error');
+                    responseContent.textContent = '✅ نجح الإرسال لجميع العملاء!\n\n' + JSON.stringify(data, null, 2);
+                    console.log('✅ نجح الإرسال');
+                } else {
+                    responseDiv.classList.add('error');
+                    responseDiv.classList.remove('success');
+                    responseContent.textContent = '❌ خطأ!\n\n' + JSON.stringify(data, null, 2);
+                    console.error('❌ فشل الإرسال');
+                }
+            } catch (error) {
+                responseDiv.classList.add('show', 'error');
+                responseDiv.classList.remove('success');
+                responseContent.textContent = '❌ خطأ في الاتصال:\n\n' + error.message;
+                console.error('❌ خطأ:', error);
+            }
+        });
+    </script>
+</body>
+</html>

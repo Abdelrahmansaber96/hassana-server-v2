@@ -188,6 +188,53 @@ const updateCustomerProfile = asyncHandler(async (req, res) => {
   }, 'Profile updated successfully');
 });
 
+// @desc    Delete customer account from app (soft delete)
+// @route   DELETE /api/customer-api/profile/:customerId
+// @access  Public
+const deleteCustomerAccount = asyncHandler(async (req, res) => {
+  const { customerId } = req.params;
+
+  const customer = await Customer.findById(customerId);
+
+  if (!customer) {
+    return sendError(res, 'Customer not found', 404);
+  }
+
+  if (!customer.isActive) {
+    return sendError(res, 'Customer account is already deleted', 400);
+  }
+
+  const Booking = require('../models/Booking');
+  const cancelledBookingsResult = await Booking.updateMany(
+    {
+      customer: customer._id,
+      status: { $in: ['pending', 'confirmed'] }
+    },
+    {
+      $set: {
+        status: 'cancelled',
+        cancelledAt: new Date(),
+        cancelReason: 'Customer account deleted from app'
+      }
+    }
+  );
+
+  customer.isActive = false;
+  customer.deviceTokens = [];
+
+  customer.animals.forEach((animal) => {
+    animal.isActive = false;
+  });
+
+  await customer.save();
+
+  sendSuccess(res, {
+    customerId: customer._id,
+    isActive: customer.isActive,
+    cancelledBookings: cancelledBookingsResult.modifiedCount || 0
+  }, 'Customer account deleted successfully');
+});
+
 // @desc    Add animal by customer (No Auth Required - using customer ID)
 // @route   POST /api/customer-api/:customerId/animals
 // @access  Public
@@ -720,6 +767,7 @@ module.exports = {
   loginCustomer,
   getCustomerProfile,
   updateCustomerProfile,
+  deleteCustomerAccount,
   addAnimal,
   getMyAnimals,
   updateAnimal,
