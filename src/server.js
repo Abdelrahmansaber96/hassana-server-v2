@@ -54,13 +54,13 @@ const APP_FLAGS = {
   showBookings: true,
   showVaccinations: true,
   showOffers: true,
-<<<<<<< HEAD
+
   showConsultations: true,
   showDoctors: true,
-=======
+
   showConsultations: false,
   showDoctors: false,
->>>>>>> a6d27570998dfb187173c0fb8aa712e43f322279
+
   showBranches: true,
   showNotifications: true,
 };
@@ -68,10 +68,9 @@ const APP_FLAGS = {
 app.get('/api/app-config', (req, res) => {
   res.json(APP_FLAGS);
 });
-<<<<<<< HEAD
 
-=======
->>>>>>> a6d27570998dfb187173c0fb8aa712e43f322279
+
+
 // 🔹 Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({
