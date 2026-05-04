@@ -58,8 +58,8 @@ const APP_FLAGS = {
   showConsultations: true,
   showDoctors: true,
 
-  showConsultations: false,
-  showDoctors: false,
+  showConsultations: true,
+  showDoctors: true,
 
   showBranches: true,
   showNotifications: true,
