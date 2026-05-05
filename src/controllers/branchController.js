@@ -21,6 +21,10 @@ const getBranches = asyncHandler(async (req, res) => {
     .limitFields()
     .paginate();
 
+  pagination.query = pagination.query
+    .select('-image -__v')
+    .lean();
+
   const result = await pagination.execute();
 
   sendSuccess(res, result.docs, 'Branches fetched successfully', 200, { pagination: result.pagination });

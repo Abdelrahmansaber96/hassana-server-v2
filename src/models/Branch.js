@@ -96,6 +96,7 @@ const branchSchema = new mongoose.Schema({
 // Indexes for performance
 branchSchema.index({ city: 1 });
 branchSchema.index({ isActive: 1 });
+branchSchema.index({ createdAt: -1 });
 branchSchema.index({ 'coordinates.lat': 1, 'coordinates.lng': 1 });
 
 // Virtual for branch's full address

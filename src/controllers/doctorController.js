@@ -16,7 +16,10 @@ const getDoctors = asyncHandler(async (req, res) => {
     .limitFields()
     .paginate();
 
-  pagination.query = pagination.query.populate('branch', 'name code city');
+  pagination.query = pagination.query
+    .select('-image -reviews -__v')
+    .populate('branch', 'name code city')
+    .lean();
 
   const result = await pagination.execute();
 
