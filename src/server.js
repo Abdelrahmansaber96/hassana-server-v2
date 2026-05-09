@@ -54,13 +54,8 @@ const APP_FLAGS = {
   showBookings: true,
   showVaccinations: true,
   showOffers: true,
-
   showConsultations: true,
-  showDoctors: true,
-
-  showConsultations: true,
-  showDoctors: true,
-
+  showDoctors: false,
   showBranches: true,
   showNotifications: true,
 };
