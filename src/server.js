@@ -51,13 +51,13 @@ if (process.env.NODE_ENV === 'development') {
 
 // 🔹 App feature flags - غيّر القيم هنا مباشرة
 const APP_FLAGS = {
-  showBookings: true,
-  showVaccinations: true,
-  showOffers: true,
-  showConsultations: true,
-  showDoctors: true,
-  showBranches: true,
-  showNotifications: true,
+  showBookings: false,
+  showVaccinations: false,
+  showOffers: false,
+  showConsultations: false,
+  showDoctors: false,
+  showBranches: false,
+  showNotifications: false,
 };
 
 app.get('/api/app-config', (req, res) => {
